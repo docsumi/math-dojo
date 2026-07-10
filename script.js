@@ -792,6 +792,8 @@ function unitProgress(unit) {
   return { done, total: chs.length };
 }
 function getChapter(unit, chapterNum) {
+  const expanded = typeof SPACE_EXPANDED !== 'undefined' && SPACE_EXPANDED[`${unit}-${chapterNum}`];
+  if (expanded) return expanded;
   return SPACE_DATA.chapters.find(c => c.unit === unit && c.chapter === chapterNum);
 }
 
