@@ -14,7 +14,7 @@
   <section id="screen-home" class="screen active">
     <header class="home-header">
       <h1>Math Dojo</h1>
-      <p class="subtitle">Three ways to get fast at numbers.</p>
+      <p class="subtitle">Math tricks, plus Space Olympiad prep.</p>
     </header>
 
     <div class="mode-grid">
@@ -38,6 +38,14 @@
         </span>
         <span class="mode-title">Japanese Abacus</span>
         <span class="mode-desc">Soroban beads, and Anzan flash-math drills.</span>
+      </button>
+
+      <button class="mode-card mode-space" data-mode="space">
+        <span class="mode-icon icon-space" aria-hidden="true">
+          <span class="space-icon-orbit"><span class="space-icon-planet"></span></span>
+        </span>
+        <span class="mode-title">Space Olympiad</span>
+        <span class="mode-desc">11 units, 77 chapters — study, then take the quiz.</span>
       </button>
     </div>
   </section>
@@ -242,8 +250,18 @@
     </div>
   </section>
 
+  <!-- SPACE OLYMPIAD SCREEN -->
+  <section id="screen-space" class="screen">
+    <header class="mode-header space-theme">
+      <button class="back-btn" id="space-back-btn">&larr; Dojo</button>
+      <h2 id="space-header-title">Space Olympiad</h2>
+    </header>
+    <div id="space-body"></div>
+  </section>
+
 </div>
 
+<script src="space-data.js"></script>
 <script src="script.js"></script>
 </body>
 </html>

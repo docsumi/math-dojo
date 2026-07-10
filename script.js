@@ -31,6 +31,7 @@ $all('.mode-card').forEach(card => {
   card.addEventListener('click', () => {
     const mode = card.dataset.mode;
     showScreen(mode);
+    if (mode === 'space') { spaceGoUnits(); return; }
     if (mode === 'mental') nextMentalProblem();
     if (mode === 'finger') nextFingerTarget();
     if (mode === 'soroban') nextSorobanTarget();
@@ -764,3 +765,277 @@ initLearn('soroban', sorobanLearnSteps);
 ['mental', 'finger', 'soroban'].forEach(mode => {
   wireSegmented($(`#${mode}-section-tabs`), val => setSectionTab(mode, val));
 });
+
+// =====================================================
+// SPACE OLYMPIAD — 11 units, 77 chapters, generated from the ISO 2026
+// Foundation Level textbook. Chapter data lives in space-data.js.
+// =====================================================
+const SPACE_UNIT_COUNT = 11;
+const spaceProgress = JSON.parse(localStorage.getItem('spaceProgress') || '{}');
+
+function escapeHtml(s) {
+  const d = document.createElement('div');
+  d.textContent = s == null ? '' : s;
+  return d.innerHTML;
+}
+
+function markChapterDone(unit, chapter) {
+  spaceProgress[`${unit}-${chapter}`] = true;
+  localStorage.setItem('spaceProgress', JSON.stringify(spaceProgress));
+}
+function chaptersForUnit(unit) {
+  return SPACE_DATA.chapters.filter(c => c.unit === unit);
+}
+function unitProgress(unit) {
+  const chs = chaptersForUnit(unit);
+  const done = chs.filter(c => spaceProgress[`${c.unit}-${c.chapter}`]).length;
+  return { done, total: chs.length };
+}
+function getChapter(unit, chapterNum) {
+  return SPACE_DATA.chapters.find(c => c.unit === unit && c.chapter === chapterNum);
+}
+
+const space = { view: 'units', unit: null, chapter: null, sub: 'learn', learnStep: 0, quiz: null };
+
+function spaceGoUnits() {
+  space.view = 'units';
+  $('#space-header-title').textContent = 'Space Olympiad';
+  renderSpace();
+}
+function spaceGoChapters(unit) {
+  space.view = 'chapters';
+  space.unit = unit;
+  $('#space-header-title').textContent = 'Unit ' + unit;
+  renderSpace();
+}
+function spaceGoChapter(unit, chapterNum) {
+  space.view = 'chapter';
+  space.unit = unit;
+  space.chapter = chapterNum;
+  space.sub = 'learn';
+  space.learnStep = 0;
+  space.quiz = null;
+  $('#space-header-title').textContent = getChapter(unit, chapterNum).title;
+  renderSpace();
+}
+
+$('#space-back-btn').addEventListener('click', () => {
+  if (space.view === 'chapter') spaceGoChapters(space.unit);
+  else if (space.view === 'chapters') spaceGoUnits();
+  else showScreen('home');
+});
+
+function renderSpace() {
+  const body = $('#space-body');
+  body.innerHTML = '';
+  if (space.view === 'units') renderSpaceUnits(body);
+  else if (space.view === 'chapters') renderSpaceChapterList(body);
+  else renderSpaceChapterScreen(body);
+}
+
+function renderSpaceUnits(body) {
+  const grid = document.createElement('div');
+  grid.className = 'unit-grid';
+  for (let u = 1; u <= SPACE_UNIT_COUNT; u++) {
+    const title = SPACE_DATA.unitTitles[u];
+    const { done, total } = unitProgress(u);
+    const card = document.createElement('button');
+    card.className = 'unit-card';
+    card.innerHTML =
+      `<span class="unit-eyebrow">Unit ${u}</span>` +
+      `<span class="unit-title">${escapeHtml(title)}</span>` +
+      `<span class="unit-meta">${total} chapters &middot; ${done}/${total} practiced</span>` +
+      `<span class="unit-progress-track"><span class="unit-progress-fill" style="width:${total ? (done / total * 100) : 0}%"></span></span>`;
+    card.addEventListener('click', () => spaceGoChapters(u));
+    grid.appendChild(card);
+  }
+  body.appendChild(grid);
+}
+
+function renderSpaceChapterList(body) {
+  const crumb = document.createElement('div');
+  crumb.className = 'crumb-row';
+  crumb.innerHTML = `<span class="crumb-title">Unit ${space.unit}: ${escapeHtml(SPACE_DATA.unitTitles[space.unit])}</span>`;
+  body.appendChild(crumb);
+
+  const list = document.createElement('div');
+  list.className = 'chapter-list';
+  chaptersForUnit(space.unit).forEach(c => {
+    const row = document.createElement('button');
+    row.className = 'chapter-row';
+    const done = spaceProgress[`${c.unit}-${c.chapter}`];
+    row.innerHTML =
+      `<span class="chapter-num">${c.chapter}.</span>` +
+      `<span class="chapter-name">${escapeHtml(c.title)}</span>` +
+      (done ? '<span class="chapter-check">Done</span>' : '');
+    row.addEventListener('click', () => spaceGoChapter(c.unit, c.chapter));
+    list.appendChild(row);
+  });
+  body.appendChild(list);
+}
+
+function renderSpaceChapterScreen(body) {
+  const ch = getChapter(space.unit, space.chapter);
+
+  const tabsWrap = document.createElement('div');
+  tabsWrap.className = 'section-tabs-wrap';
+  tabsWrap.innerHTML =
+    '<div class="segmented" id="space-chapter-tabs">' +
+    `<button data-val="learn" class="${space.sub === 'learn' ? 'active' : ''}">Learn</button>` +
+    `<button data-val="practice" class="${space.sub === 'practice' ? 'active' : ''}">Practice</button>` +
+    '</div>';
+  body.appendChild(tabsWrap);
+  wireSegmented($('#space-chapter-tabs', body), val => {
+    space.sub = val;
+    if (val === 'practice' && !space.quiz) startChapterQuiz(ch);
+    renderSpace();
+  });
+
+  const container = document.createElement('div');
+  body.appendChild(container);
+
+  if (space.sub === 'learn') renderChapterLearn(container, ch);
+  else renderChapterPractice(container, ch);
+}
+
+// ---------- Chapter Learn steps (generic, driven by chapter data) ----------
+function chapterLearnSteps(ch) {
+  const steps = [];
+  steps.push({
+    title: ch.title,
+    body: ch.letUsBegin,
+    extra: ch.learningOutcomes.length
+      ? '<div class="sub-block"><h4>You will learn to</h4><ul class="outcome-list">' +
+        ch.learningOutcomes.map(o => `<li>${escapeHtml(o)}</li>`).join('') + '</ul></div>'
+      : '',
+  });
+  steps.push({
+    title: 'Understanding the idea',
+    body: ch.understanding,
+    extra: ch.figure ? `<div class="figure-note">${escapeHtml(ch.figure)}</div>` : '',
+  });
+  if (ch.example) {
+    steps.push({
+      title: 'Example',
+      body: ch.example,
+      extra: ch.whyHelps ? `<div class="why-helps"><strong>Why this helps:</strong> ${escapeHtml(ch.whyHelps)}</div>` : '',
+    });
+  }
+  if (ch.activity || ch.thinkDiscuss) {
+    steps.push({
+      title: 'Try it yourself',
+      body: ch.activity,
+      extra: ch.thinkDiscuss
+        ? `<div class="sub-block"><h4>Think and discuss</h4><p>${escapeHtml(ch.thinkDiscuss)}</p></div>`
+        : '',
+    });
+  }
+  steps.push({
+    title: 'What you have learnt',
+    body: '',
+    extra:
+      '<ul class="learnt-list">' + ch.whatLearnt.map(o => `<li>${escapeHtml(o)}</li>`).join('') + '</ul>' +
+      (ch.furtherReading ? `<div class="sub-block"><h4>Further reading</h4><p>${escapeHtml(ch.furtherReading)}</p></div>` : ''),
+  });
+  steps.push({
+    title: 'Ready to practice',
+    body: 'Answer 6 quick questions about this chapter to check what you remember.',
+    extra: '',
+  });
+  return steps;
+}
+
+function renderChapterLearn(container, ch) {
+  const steps = chapterLearnSteps(ch);
+  if (space.learnStep >= steps.length) space.learnStep = steps.length - 1;
+  const step = steps[space.learnStep];
+
+  container.innerHTML =
+    '<div class="learn-card">' +
+    `<div class="learn-step-title">${escapeHtml(step.title)}</div>` +
+    (step.body ? `<p class="learn-step-body">${escapeHtml(step.body)}</p>` : '') +
+    step.extra +
+    '</div>' +
+    '<div class="learn-nav">' +
+    '<div class="learn-dots" id="space-learn-dots"></div>' +
+    '<div class="learn-nav-btns">' +
+    `<button class="learn-nav-btn" id="space-learn-prev" ${space.learnStep === 0 ? 'disabled' : ''}>&larr; Back</button>` +
+    `<button class="learn-nav-btn primary" id="space-learn-next">${space.learnStep === steps.length - 1 ? 'Start Practicing →' : 'Next →'}</button>` +
+    '</div></div>';
+
+  const dotsEl = $('#space-learn-dots', container);
+  steps.forEach((_, i) => {
+    const d = document.createElement('span');
+    d.className = 'learn-dot' + (i === space.learnStep ? ' active' : '');
+    dotsEl.appendChild(d);
+  });
+  $('#space-learn-prev', container).addEventListener('click', () => { space.learnStep--; renderSpace(); });
+  $('#space-learn-next', container).addEventListener('click', () => {
+    if (space.learnStep < steps.length - 1) { space.learnStep++; renderSpace(); }
+    else { space.sub = 'practice'; startChapterQuiz(ch); renderSpace(); }
+  });
+}
+
+// ---------- Chapter Practice (MCQ quiz) ----------
+function startChapterQuiz(ch) {
+  space.quiz = { qIndex: 0, score: 0 };
+}
+
+function renderChapterPractice(container, ch) {
+  if (!space.quiz) startChapterQuiz(ch);
+  const quiz = space.quiz;
+  if (quiz.qIndex >= ch.mcqs.length) {
+    renderChapterComplete(container, ch);
+    return;
+  }
+  const mcq = ch.mcqs[quiz.qIndex];
+  container.innerHTML =
+    '<div class="problem-stage">' +
+    `<div class="mcq-progress">Question ${quiz.qIndex + 1} of ${ch.mcqs.length} &middot; Score ${quiz.score}</div>` +
+    `<div class="problem-text" style="font-size:19px;">${escapeHtml(mcq.question)}</div>` +
+    '<div class="mcq-options" id="space-mcq-options"></div>' +
+    '<div class="feedback" id="space-mcq-feedback"></div>' +
+    '</div>';
+
+  const optsEl = $('#space-mcq-options', container);
+  ['A', 'B', 'C', 'D'].forEach(letter => {
+    if (!mcq.options[letter]) return;
+    const btn = document.createElement('button');
+    btn.className = 'mcq-option';
+    btn.innerHTML = `<span class="mcq-letter">${letter}</span><span>${escapeHtml(mcq.options[letter])}</span>`;
+    btn.addEventListener('click', () => selectMcqOption(ch, letter, container));
+    optsEl.appendChild(btn);
+  });
+}
+
+function selectMcqOption(ch, letter, container) {
+  const quiz = space.quiz;
+  const mcq = ch.mcqs[quiz.qIndex];
+  const correct = letter === mcq.answer;
+  const optsEl = $('#space-mcq-options', container);
+  $all('button', optsEl).forEach(b => {
+    b.disabled = true;
+    const btnLetter = b.querySelector('.mcq-letter').textContent;
+    if (btnLetter === mcq.answer) b.classList.add('correct');
+    else if (btnLetter === letter) b.classList.add('incorrect');
+  });
+  if (correct) quiz.score++;
+  flashFeedback($('#space-mcq-feedback', container), correct, correct ? 'Correct!' : `Not quite — the answer is ${mcq.answer}.`);
+  quiz.qIndex++;
+  setTimeout(() => renderSpace(), 1300);
+}
+
+function renderChapterComplete(container, ch) {
+  markChapterDone(ch.unit, ch.chapter);
+  const quiz = space.quiz;
+  container.innerHTML =
+    '<div class="problem-stage chapter-complete">' +
+    `<div class="big-score">${quiz.score}/${ch.mcqs.length}</div>` +
+    `<p class="learn-step-body" style="text-align:center;margin-top:8px;">Chapter complete: ${escapeHtml(ch.title)}</p>` +
+    '<div class="learn-nav-btns" style="justify-content:center;margin-top:18px;">' +
+    '<button class="learn-nav-btn" id="space-quiz-again">Try Again</button>' +
+    '<button class="learn-nav-btn primary" id="space-back-to-chapters">Back to Chapters</button>' +
+    '</div></div>';
+  $('#space-quiz-again', container).addEventListener('click', () => { startChapterQuiz(ch); renderSpace(); });
+  $('#space-back-to-chapters', container).addEventListener('click', () => spaceGoChapters(ch.unit));
+}
