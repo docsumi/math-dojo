@@ -900,6 +900,109 @@ function renderSpaceChapterScreen(body) {
   else renderChapterPractice(container, ch);
 }
 
+// ---------- Space diagrams (reusable illustrations, described by plain data) ----------
+function renderSpaceDiagram(el, diagram) {
+  if (!el || !diagram) return;
+  if (diagram.type === 'sizeCompare') renderSizeCompare(el, diagram.items);
+  else if (diagram.type === 'sequence') renderSequenceDiagram(el, diagram.items);
+  else if (diagram.type === 'orbit') renderOrbitDiagram(el, diagram);
+}
+
+function renderSizeCompare(el, items) {
+  el.innerHTML = '';
+  el.className = 'space-diagram size-compare-row';
+  items.forEach(item => {
+    const col = document.createElement('div');
+    col.className = 'size-compare-item';
+    const circle = document.createElement('div');
+    circle.className = 'size-compare-circle';
+    circle.style.width = item.diameter + 'px';
+    circle.style.height = item.diameter + 'px';
+    circle.style.background = item.color;
+    const label = document.createElement('div');
+    label.className = 'size-compare-label';
+    label.textContent = item.label;
+    col.appendChild(circle);
+    col.appendChild(label);
+    el.appendChild(col);
+  });
+}
+
+function renderSequenceDiagram(el, items) {
+  el.innerHTML = '';
+  el.className = 'space-diagram sequence-row';
+  items.forEach((item, i) => {
+    const col = document.createElement('div');
+    col.className = 'sequence-item';
+    const dot = document.createElement('div');
+    dot.className = 'sequence-dot';
+    dot.style.background = item.color;
+    const size = item.size || 22;
+    dot.style.width = size + 'px';
+    dot.style.height = size + 'px';
+    const label = document.createElement('div');
+    label.className = 'sequence-label';
+    label.textContent = item.label;
+    col.appendChild(dot);
+    col.appendChild(label);
+    el.appendChild(col);
+    if (i < items.length - 1) {
+      const arrow = document.createElement('div');
+      arrow.className = 'sequence-arrow';
+      arrow.textContent = '→';
+      el.appendChild(arrow);
+    }
+  });
+}
+
+function renderOrbitDiagram(el, diagram) {
+  el.innerHTML = '';
+  el.className = 'space-diagram orbit-diagram';
+  const maxRadius = Math.max(...diagram.orbiters.map(o => o.radius));
+  const size = maxRadius * 2 + 40;
+  el.style.width = size + 'px';
+  el.style.height = size + 'px';
+  const cx = size / 2, cy = size / 2;
+
+  const centerSize = diagram.centerSize || 30;
+  const center = document.createElement('div');
+  center.className = 'orbit-center';
+  center.style.width = centerSize + 'px';
+  center.style.height = centerSize + 'px';
+  center.style.left = (cx - centerSize / 2) + 'px';
+  center.style.top = (cy - centerSize / 2) + 'px';
+  center.style.background = diagram.centerColor;
+  el.appendChild(center);
+
+  diagram.orbiters.forEach(o => {
+    const ring = document.createElement('div');
+    ring.className = 'orbit-ring';
+    ring.style.width = ring.style.height = (o.radius * 2) + 'px';
+    ring.style.left = (cx - o.radius) + 'px';
+    ring.style.top = (cy - o.radius) + 'px';
+    el.appendChild(ring);
+
+    const rad = (o.angle * Math.PI) / 180;
+    const x = cx + o.radius * Math.cos(rad);
+    const y = cy + o.radius * Math.sin(rad);
+
+    const body = document.createElement('div');
+    body.className = 'orbit-body';
+    body.style.width = body.style.height = o.size + 'px';
+    body.style.left = (x - o.size / 2) + 'px';
+    body.style.top = (y - o.size / 2) + 'px';
+    body.style.background = o.color;
+    el.appendChild(body);
+
+    const label = document.createElement('div');
+    label.className = 'orbit-body-label';
+    label.textContent = o.label;
+    label.style.left = x + 'px';
+    label.style.top = (y + o.size / 2 + 4) + 'px';
+    el.appendChild(label);
+  });
+}
+
 // ---------- Chapter Learn steps (generic, driven by chapter data) ----------
 function chapterLearnSteps(ch) {
   const steps = [];
@@ -914,7 +1017,11 @@ function chapterLearnSteps(ch) {
   steps.push({
     title: 'Understanding the idea',
     body: ch.understanding,
-    extra: ch.figure ? `<div class="figure-note">${escapeHtml(ch.figure)}</div>` : '',
+    extra: ch.diagram
+      ? '<div class="space-diagram" id="space-ch-diagram"></div>' +
+        (ch.diagram.caption ? `<div class="diagram-caption">${escapeHtml(ch.diagram.caption)}</div>` : '')
+      : (ch.figure ? `<div class="figure-note">${escapeHtml(ch.figure)}</div>` : ''),
+    diagram: ch.diagram || null,
   });
   if (ch.example) {
     steps.push({
@@ -941,7 +1048,7 @@ function chapterLearnSteps(ch) {
   });
   steps.push({
     title: 'Ready to practice',
-    body: 'Answer 6 quick questions about this chapter to check what you remember.',
+    body: `Answer ${ch.mcqs.length} quick questions about this chapter to check what you remember.`,
     extra: '',
   });
   return steps;
@@ -964,6 +1071,8 @@ function renderChapterLearn(container, ch) {
     `<button class="learn-nav-btn" id="space-learn-prev" ${space.learnStep === 0 ? 'disabled' : ''}>&larr; Back</button>` +
     `<button class="learn-nav-btn primary" id="space-learn-next">${space.learnStep === steps.length - 1 ? 'Start Practicing →' : 'Next →'}</button>` +
     '</div></div>';
+
+  if (step.diagram) renderSpaceDiagram($('#space-ch-diagram', container), step.diagram);
 
   const dotsEl = $('#space-learn-dots', container);
   steps.forEach((_, i) => {
