@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Math Dojo</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div id="app">
+
+  <!-- HOME SCREEN -->
+  <section id="screen-home" class="screen active">
+    <header class="home-header">
+      <h1>Math Dojo</h1>
+      <p class="subtitle">Three ways to get fast at numbers.</p>
+    </header>
+
+    <div class="mode-grid">
+      <button class="mode-card mode-mental" data-mode="mental">
+        <span class="mode-icon icon-mental" aria-hidden="true"><span></span><span></span><span></span></span>
+        <span class="mode-title">Mental Math</span>
+        <span class="mode-desc">Quick problems + tricks to solve them in your head.</span>
+      </button>
+
+      <button class="mode-card mode-finger" data-mode="finger">
+        <span class="mode-icon icon-finger" aria-hidden="true">
+          <span class="finger-icon-hand"><span></span><span></span><span></span><span></span><span></span></span>
+        </span>
+        <span class="mode-title">Finger Math</span>
+        <span class="mode-desc">Count to 99 on two hands, ten-finger style.</span>
+      </button>
+
+      <button class="mode-card mode-soroban" data-mode="soroban">
+        <span class="mode-icon icon-soroban" aria-hidden="true">
+          <span class="soroban-icon-rod"></span><span class="soroban-icon-rod"></span><span class="soroban-icon-rod"></span>
+        </span>
+        <span class="mode-title">Japanese Abacus</span>
+        <span class="mode-desc">Soroban beads, and Anzan flash-math drills.</span>
+      </button>
+    </div>
+  </section>
+
+  <!-- MENTAL MATH SCREEN -->
+  <section id="screen-mental" class="screen">
+    <header class="mode-header mental-theme">
+      <button class="back-btn" data-back>&larr; Dojo</button>
+      <h2>Mental Math</h2>
+      <div class="score-pill"><span id="mental-streak">0</span> in a row</div>
+    </header>
+
+    <div class="section-tabs-wrap">
+      <div class="segmented" id="mental-section-tabs">
+        <button data-val="learn" class="active">Learn</button>
+        <button data-val="practice">Practice</button>
+      </div>
+    </div>
+
+    <div class="learn-pane" id="mental-learn-pane">
+      <div class="learn-card">
+        <div class="learn-step-title" id="mental-learn-title"></div>
+        <p class="learn-step-body" id="mental-learn-body"></p>
+        <div class="demo-box" id="mental-demo"></div>
+      </div>
+      <div class="learn-nav">
+        <div class="learn-dots" id="mental-learn-dots"></div>
+        <div class="learn-nav-btns">
+          <button class="learn-nav-btn" id="mental-learn-prev">&larr; Back</button>
+          <button class="learn-nav-btn primary" id="mental-learn-next">Next &rarr;</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="practice-pane" id="mental-practice-pane" hidden>
+      <div class="controls-row">
+        <div class="control-group">
+          <label>Operation</label>
+          <div class="segmented" id="mental-op">
+            <button data-val="add" class="active">+</button>
+            <button data-val="sub">&minus;</button>
+            <button data-val="mul">&times;</button>
+            <button data-val="mix">Mix</button>
+          </div>
+        </div>
+        <div class="control-group">
+          <label>Level</label>
+          <div class="segmented" id="mental-level">
+            <button data-val="easy" class="active">Easy</button>
+            <button data-val="medium">Medium</button>
+            <button data-val="hard">Hard</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="problem-stage" id="mental-stage">
+        <div class="problem-text" id="mental-problem">7 + 5</div>
+        <form id="mental-form" autocomplete="off">
+          <input type="text" inputmode="numeric" id="mental-answer" placeholder="?" autocomplete="off">
+          <button type="submit">Check</button>
+        </form>
+        <div class="feedback" id="mental-feedback"></div>
+        <div class="tip" id="mental-tip"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FINGER MATH SCREEN -->
+  <section id="screen-finger" class="screen">
+    <header class="mode-header finger-theme">
+      <button class="back-btn" data-back>&larr; Dojo</button>
+      <h2>Finger Math</h2>
+      <div class="score-pill"><span id="finger-streak">0</span> in a row</div>
+    </header>
+
+    <div class="section-tabs-wrap">
+      <div class="segmented" id="finger-section-tabs">
+        <button data-val="learn" class="active">Learn</button>
+        <button data-val="practice">Practice</button>
+      </div>
+    </div>
+
+    <div class="learn-pane" id="finger-learn-pane">
+      <div class="learn-card">
+        <div class="learn-step-title" id="finger-learn-title"></div>
+        <p class="learn-step-body" id="finger-learn-body"></p>
+        <div class="demo-box" id="finger-demo"></div>
+      </div>
+      <div class="learn-nav">
+        <div class="learn-dots" id="finger-learn-dots"></div>
+        <div class="learn-nav-btns">
+          <button class="learn-nav-btn" id="finger-learn-prev">&larr; Back</button>
+          <button class="learn-nav-btn primary" id="finger-learn-next">Next &rarr;</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="practice-pane" id="finger-practice-pane" hidden>
+      <div class="controls-row">
+        <div class="control-group">
+          <label>Level</label>
+          <div class="segmented" id="finger-level">
+            <button data-val="easy" class="active">0&ndash;9 (one hand)</button>
+            <button data-val="hard">0&ndash;99 (two hands)</button>
+          </div>
+        </div>
+      </div>
+
+      <p class="how-it-works" id="finger-explainer">
+        Right hand: thumb = <strong>5</strong>, each finger = <strong>1</strong>.
+      </p>
+
+      <div class="problem-stage">
+        <div class="problem-text">Show me: <span id="finger-target">6</span></div>
+
+        <div class="hands-wrap">
+          <div class="hand" id="hand-left" data-side="left" hidden></div>
+          <div class="hand" id="hand-right" data-side="right"></div>
+        </div>
+
+        <div class="finger-readout">You're showing <span id="finger-count">0</span></div>
+        <button class="big-check-btn" id="finger-check">Check</button>
+        <div class="feedback" id="finger-feedback"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SOROBAN SCREEN -->
+  <section id="screen-soroban" class="screen">
+    <header class="mode-header soroban-theme">
+      <button class="back-btn" data-back>&larr; Dojo</button>
+      <h2>Japanese Abacus</h2>
+      <div class="score-pill"><span id="soroban-streak">0</span> in a row</div>
+    </header>
+
+    <div class="section-tabs-wrap">
+      <div class="segmented" id="soroban-section-tabs">
+        <button data-val="learn" class="active">Learn</button>
+        <button data-val="practice">Practice</button>
+      </div>
+    </div>
+
+    <div class="learn-pane" id="soroban-learn-pane">
+      <div class="learn-card">
+        <div class="learn-step-title" id="soroban-learn-title"></div>
+        <p class="learn-step-body" id="soroban-learn-body"></p>
+        <div class="demo-box" id="soroban-demo"></div>
+      </div>
+      <div class="learn-nav">
+        <div class="learn-dots" id="soroban-learn-dots"></div>
+        <div class="learn-nav-btns">
+          <button class="learn-nav-btn" id="soroban-learn-prev">&larr; Back</button>
+          <button class="learn-nav-btn primary" id="soroban-learn-next">Next &rarr;</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="practice-pane" id="soroban-practice-pane" hidden>
+      <div class="controls-row">
+        <div class="control-group">
+          <label>Practice</label>
+          <div class="segmented" id="soroban-sub">
+            <button data-val="represent" class="active">Show a Number</button>
+            <button data-val="anzan">Anzan Flash</button>
+          </div>
+        </div>
+        <div class="control-group">
+          <label>Level</label>
+          <div class="segmented" id="soroban-level">
+            <button data-val="easy" class="active">Easy</button>
+            <button data-val="medium">Medium</button>
+            <button data-val="hard">Hard</button>
+          </div>
+        </div>
+      </div>
+
+      <p class="how-it-works">
+        Each rod is a digit. The top bead = <strong>5</strong>. Each of the four bottom beads = <strong>1</strong>. Slide beads toward the bar to count them.
+      </p>
+
+      <!-- Represent-a-number sub-mode -->
+      <div class="problem-stage" id="soroban-represent-stage">
+        <div class="problem-text">Show me: <span id="soroban-target">274</span></div>
+        <div class="abacus" id="abacus"></div>
+        <div class="finger-readout">Abacus shows <span id="soroban-count">0</span></div>
+        <button class="big-check-btn" id="soroban-check">Check</button>
+        <div class="feedback" id="soroban-feedback"></div>
+      </div>
+
+      <!-- Anzan flash sub-mode -->
+      <div class="problem-stage" id="soroban-anzan-stage" hidden>
+        <div class="anzan-flash" id="anzan-flash">Ready?</div>
+        <button class="big-check-btn" id="anzan-start">Start</button>
+        <div class="anzan-answer" id="anzan-answer-wrap" hidden>
+          <form id="anzan-form" autocomplete="off">
+            <input type="text" inputmode="numeric" id="anzan-answer" placeholder="Total?" autocomplete="off">
+            <button type="submit">Check</button>
+          </form>
+        </div>
+        <div class="feedback" id="anzan-feedback"></div>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
