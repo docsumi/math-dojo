@@ -32,6 +32,7 @@ $all('.mode-card').forEach(card => {
     const mode = card.dataset.mode;
     showScreen(mode);
     if (mode === 'space') { spaceGoUnits(); return; }
+    if (mode === 'olympiad') { nextOlympiadQuestion(); return; }
     if (mode === 'mental') nextMentalProblem();
     if (mode === 'finger') nextFingerTarget();
     if (mode === 'soroban') nextSorobanTarget();
@@ -1149,4 +1150,67 @@ function renderChapterComplete(container, ch) {
     '</div></div>';
   $('#space-quiz-again', container).addEventListener('click', () => { startChapterQuiz(ch); renderSpace(); });
   $('#space-back-to-chapters', container).addEventListener('click', () => spaceGoChapters(ch.unit));
+}
+
+// =====================================================
+// OLYMPIAD PREP — endless SOF-style practice across Reasoning, English,
+// Living Science and Mathematics. Question generators live in olympiad-data.js.
+// =====================================================
+const olympiad = { subject: 'reasoning', streak: 0, question: null };
+const OLYMPIAD_LETTERS = ['A', 'B', 'C', 'D'];
+
+wireSegmented($('#olympiad-subject-tabs'), val => { olympiad.subject = val; nextOlympiadQuestion(); });
+
+function nextOlympiadQuestion() {
+  const gens = OLYMPIAD_GENERATORS[olympiad.subject];
+  olympiad.question = gens[randInt(0, gens.length - 1)]();
+  renderOlympiadQuestion();
+}
+
+function renderOlympiadQuestion() {
+  const q = olympiad.question;
+  const meta = OLYMPIAD_SUBJECT_META[olympiad.subject];
+
+  const tagEl = $('#olympiad-tag');
+  tagEl.textContent = meta.label;
+  tagEl.style.color = meta.color;
+
+  $('#olympiad-problem').textContent = q.text;
+
+  const passageEl = $('#olympiad-passage');
+  if (q.passage) { passageEl.textContent = q.passage; passageEl.hidden = false; }
+  else { passageEl.hidden = true; }
+
+  const optsEl = $('#olympiad-options');
+  optsEl.innerHTML = '';
+  q.options.forEach((opt, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'mcq-option';
+    btn.innerHTML = `<span class="mcq-letter">${OLYMPIAD_LETTERS[i]}</span><span>${escapeHtml(opt)}</span>`;
+    btn.addEventListener('click', () => selectOlympiadOption(i));
+    optsEl.appendChild(btn);
+  });
+
+  $('#olympiad-feedback').textContent = '';
+  $('#olympiad-feedback').className = 'feedback';
+}
+
+function selectOlympiadOption(i) {
+  const q = olympiad.question;
+  const correct = i === q.correctIndex;
+  const optsEl = $('#olympiad-options');
+  $all('button', optsEl).forEach((b, idx) => {
+    b.disabled = true;
+    if (idx === q.correctIndex) b.classList.add('correct');
+    else if (idx === i) b.classList.add('incorrect');
+  });
+  if (correct) {
+    olympiad.streak++;
+    flashFeedback($('#olympiad-feedback'), true, 'Correct!');
+  } else {
+    olympiad.streak = 0;
+    flashFeedback($('#olympiad-feedback'), false, `Not quite — the answer is ${OLYMPIAD_LETTERS[q.correctIndex]}.`);
+  }
+  $('#olympiad-streak').textContent = olympiad.streak;
+  setTimeout(nextOlympiadQuestion, 1300);
 }

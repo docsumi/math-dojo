@@ -47,6 +47,14 @@
         <span class="mode-title">Space Olympiad</span>
         <span class="mode-desc">11 units, 77 chapters — study, then take the quiz.</span>
       </button>
+
+      <button class="mode-card mode-olympiad" data-mode="olympiad">
+        <span class="mode-icon icon-olympiad" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </span>
+        <span class="mode-title">Olympiad Prep</span>
+        <span class="mode-desc">Reasoning, English, Living Science &amp; Math — endless SOF-style practice.</span>
+      </button>
     </div>
   </section>
 
@@ -259,10 +267,37 @@
     <div id="space-body"></div>
   </section>
 
+  <!-- OLYMPIAD PREP SCREEN -->
+  <section id="screen-olympiad" class="screen">
+    <header class="mode-header olympiad-theme">
+      <button class="back-btn" data-back>&larr; Dojo</button>
+      <h2>Olympiad Prep</h2>
+      <div class="score-pill"><span id="olympiad-streak">0</span> in a row</div>
+    </header>
+
+    <div class="section-tabs-wrap">
+      <div class="segmented" id="olympiad-subject-tabs">
+        <button data-val="reasoning" class="active">Reasoning</button>
+        <button data-val="english">English</button>
+        <button data-val="science">Living Science</button>
+        <button data-val="math">Math</button>
+      </div>
+    </div>
+
+    <div class="problem-stage">
+      <div class="mcq-progress" id="olympiad-tag">Reasoning</div>
+      <div class="problem-text olympiad-problem-text" id="olympiad-problem"></div>
+      <div class="passage-box" id="olympiad-passage" hidden></div>
+      <div class="mcq-options" id="olympiad-options"></div>
+      <div class="feedback" id="olympiad-feedback"></div>
+    </div>
+  </section>
+
 </div>
 
 <script src="space-data.js"></script>
 <script src="space-expanded.js"></script>
+<script src="olympiad-data.js"></script>
 <script src="script.js"></script>
 </body>
 </html>
