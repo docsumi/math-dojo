@@ -1156,14 +1156,33 @@ function renderChapterComplete(container, ch) {
 // OLYMPIAD PREP — endless SOF-style practice across Reasoning, English,
 // Living Science and Mathematics. Question generators live in olympiad-data.js.
 // =====================================================
-const olympiad = { subject: 'reasoning', streak: 0, question: null };
+const olympiad = { subject: 'reasoning', streak: 0, question: null, bags: {}, seen: {} };
 const OLYMPIAD_LETTERS = ['A', 'B', 'C', 'D'];
 
 wireSegmented($('#olympiad-subject-tabs'), val => { olympiad.subject = val; nextOlympiadQuestion(); });
 
+// Draws generators from a shuffled per-subject "bag" (each category comes up
+// once before any repeats), and skips any question whose exact text has
+// already been shown this session — so practice doesn't repeat itself.
 function nextOlympiadQuestion() {
-  const gens = OLYMPIAD_GENERATORS[olympiad.subject];
-  olympiad.question = gens[randInt(0, gens.length - 1)]();
+  const subject = olympiad.subject;
+  const gens = OLYMPIAD_GENERATORS[subject];
+  if (!olympiad.bags[subject] || olympiad.bags[subject].length === 0) olympiad.bags[subject] = shuffle(gens);
+  if (!olympiad.seen[subject]) olympiad.seen[subject] = new Set();
+  const seenSet = olympiad.seen[subject];
+
+  let q, key;
+  for (let attempts = 0; attempts < 40; attempts++) {
+    if (olympiad.bags[subject].length === 0) olympiad.bags[subject] = shuffle(gens);
+    const fn = olympiad.bags[subject].shift();
+    q = fn();
+    key = q.text + '||' + q.options.join('|');
+    if (!seenSet.has(key)) break;
+  }
+  if (seenSet.has(key)) seenSet.clear(); // this subject's pool is exhausted for now — start fresh
+  seenSet.add(key);
+
+  olympiad.question = q;
   renderOlympiadQuestion();
 }
 
